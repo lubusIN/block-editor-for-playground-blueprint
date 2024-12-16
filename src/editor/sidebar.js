@@ -12,8 +12,10 @@ import { downloadBlob } from '@wordpress/blob';
 import { DataForm } from '@wordpress/dataviews';
 import {
     Toolbar,
-    ToolbarButton
+    ToolbarButton,
+    __experimentalVStack as VStack,
 } from '@wordpress/components';
+import JsonUploadModal from '../components/OpenBlueprintJson/JsonUploadModel';
 
 /**
  * PHP and WordPress version options for dropdowns.
@@ -93,18 +95,46 @@ function BlueprintSidebarSettings() {
     });
 
     const handleBlueprintConfig = (value) => {
-        editPost({ meta: { _blueprint_config: { ...blueprint_config, ...value } } });
+        const updatedValue = {
+            ...value,
+            networking: value.networking === 'true' ? true : false,
+        };
+        editPost({ meta: { _blueprint_config: { ...blueprint_config, ...updatedValue } } });
     };
+
+    // transforming Fetched Json data from blueprint by JsonUploadModal
+    const handleJsonDataSubmit = (data) => {
+        if (data) {
+            const transformedData = {
+                landing_page: data.landingPage,
+                php_version: data.preferredVersions.php,
+                wp_version: data.preferredVersions.wp,
+                php_extension_bundles: data.phpExtensionBundles, 
+                networking: data.features.networking,
+            };
+            // Update the blueprint_config meta
+            handleBlueprintConfig(transformedData);
+            console.log("update blueprint config meta" , transformedData);
+    
+            createNotice('success', __('Blueprint configuration updated successfully!'), { type: 'snackbar' });
+        } else {
+            createNotice('error', __('Failed to update Blueprint configuration'), { type: 'snackbar' });
+        }
+    };
+    
 
     return (
         <>
             <PluginPostStatusInfo>
+            <VStack spacing={5} >
+               <JsonUploadModal onSubmitData={handleJsonDataSubmit}/> 
                 <Toolbar>
                     <ToolbarButton icon={globe} label="Open in playground" href={playgroundBase + prepareSchema()} target="_blank" />
                     <ToolbarButton icon={download} label="Download JSON" onClick={handleDownload} />
                     <ToolbarButton icon={copy} label="Copy JSON" ref={handleCopy} />
                     <ToolbarButton icon={code} label="Open in Builder" href={playgroundBuilderBase + prepareSchema()} target="_blank" />
                 </Toolbar>
+                </VStack>
             </PluginPostStatusInfo>
             <PluginDocumentSettingPanel name='playground-settings' title='Playground Settings'>
                 <DataForm
