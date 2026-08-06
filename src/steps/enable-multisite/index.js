@@ -1,21 +1,15 @@
 /**
- * Wordpress dependencies.
+ * WordPress dependencies.
  */
 import { __ } from '@wordpress/i18n';
 import { registerBlockType } from '@wordpress/blocks';
 import { blockMeta } from '@wordpress/icons';
-import { useBlockProps } from '@wordpress/block-editor';
-import {
-	Placeholder,
-	Icon,
-	__experimentalVStack as VStack,
-	__experimentalHStack as HStack,
-	__experimentalText as Text,
-} from '@wordpress/components';
+import { __experimentalText as Text } from '@wordpress/components';
 
 /**
  * Internal dependencies.
  */
+import { StepWrapper } from '../../components';
 import metadata from './block.json';
 
 /**
@@ -24,33 +18,28 @@ import metadata from './block.json';
  *
  * @return {Element} Element to render.
  */
-function Edit() {
-
+function Edit( { isSelected } ) {
 	return (
-		<p {...useBlockProps()}>
-			<Placeholder
-				preview={
-					<HStack justify='left' align={'center'} spacing={3}>
-						<Icon icon={blockMeta} size={28} className='step-icon' />
-						<VStack spacing={1}>
-							<Text upperCase size={12} weight={500} color='#949494'>{metadata.title}</Text>
-							{!isSelected && (
-								<Text weight={600}>
-									{__("Activate Multisite Network", 'wp-playground-blueprint-editor')}
-								</Text>
-							)}
-						</VStack>
-					</HStack>
-				}
-			/>
-		</p>
+		<StepWrapper
+			title={ metadata.title }
+			icon={ blockMeta }
+			isSelected={ isSelected }
+			summary={
+				<Text weight={ 600 }>
+					{ __(
+						'Activate Multisite Network',
+						'wp-playground-blueprint-editor'
+					) }
+				</Text>
+			}
+		/>
 	);
 }
 
 /**
  * Every block starts by registering a new block type definition.
  */
-registerBlockType(metadata.name, {
+registerBlockType( metadata.name, {
 	icon: blockMeta,
 	edit: Edit,
-});
+} );

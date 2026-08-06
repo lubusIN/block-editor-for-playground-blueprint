@@ -1,0 +1,10 @@
+name: WordPress Playground Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, closed]
+
+jobs:
+  build-and-preview:
+    uses: lubusIN/.github/.github/workflows/pr-preview.yml@main
+    secrets: inherit

@@ -1,0 +1,15 @@
+name: Sync to Playground
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push-on-push:
+    uses: lubusIN/.github/.github/workflows/sync-playground.yml@main
+    with:
+      force-folder: |
+        build/
+        vendor/
+    secrets: inherit

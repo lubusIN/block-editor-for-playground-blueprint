@@ -1,4 +1,40 @@
 <?php
+defined( 'ABSPATH' ) || exit;
+
+/**
+ * Retrieves the canonical list of blueprint step slugs.
+ *
+ * @return array Array of step slugs.
+ */
+function vbb_get_blueprint_steps()
+{
+    return [
+        'login',
+        'install-plugin',
+        'enable-multisite',
+        'cp',
+        'install-theme',
+        'define-site-url',
+        'activate-theme',
+        'activate-plugin',
+        'import-wordpress-files',
+        'rmdir',
+        'rm',
+        'reset-data',
+        'mv',
+        'define-wp-config-consts',
+        'write-file',
+        'wp-cli',
+        'run-php',
+        'mkdir',
+        'import-wxr',
+        'update-user-meta',
+        'unzip',
+        'set-site-options',
+        'set-site-language',
+        'import-theme-starter-content',
+    ];
+}
 
 /**
  * Filters the list of allowed block types in the block editor.
@@ -11,64 +47,25 @@
  *
  * @return array The array of allowed block types.
  */
-function filter_allowed_block_types($allowed_block_types, $block_editor_context)
+function vbb_filter_allowed_block_types($allowed_block_types, $block_editor_context)
 {
     // Get all registered block types
     $all_blocks = WP_Block_Type_Registry::get_instance()->get_all_registered();
 
-    $blueprint_steps = [
-        'playground-step/login',
-        'playground-step/install-plugin',
-        'playground-step/install-theme',
-        'playground-step/enable-multisite',
-        'playground-step/define-site-url',
-        'playground-step/cp',
-        'playground-step/activate-theme',
-        'playground-step/activate-plugin',
-        'playground-step/import-wordpress-files',
-        'playground-step/rmdir',
-        'playground-step/rm',
-        'playground-step/reset-data',
-        'playground-step/write-file',
-        'playground-step/mv',
-        'playground-step/define-wp-config-consts',
-        'playground-step/wp-cli',
-        'playground-step/run-php',
-        'playground-step/unzip',
-        'playground-step/update-user-meta',
-        'playground-step/set-site-options',
-        'playground-step/mkdir',
-        'playground-step/import-wxr',
-        'playground-step/set-site-language',
-        'playground-step/import-theme-starter-content',
-    ];
+    // Dynamically prefix the step slugs
+    $blueprint_steps = array_map(function($step) {
+        return 'playground-step/' . $step;
+    }, vbb_get_blueprint_steps());
 
-    if ($block_editor_context->post->post_type === 'blueprint') {
+    if (isset($block_editor_context->post->post_type) && $block_editor_context->post->post_type === 'blueprint') {
         // Allow only blueprint steps for 'blueprint' post type
         return $blueprint_steps;
     }
 
     // Allow all blocks except blueprint steps for other post types
-    $allowed_block_types = array_keys($all_blocks);
-
-    // Create a new array for the allowed blocks.
-    $filtered_blocks = [];
-
-    // Loop through each block in the allowed blocks list.
-    foreach ($allowed_block_types as $block) {
-
-        // Check if the block is not in the disallowed blocks list.
-        if (! in_array($block, $blueprint_steps, true)) {
-
-            // If it's not disallowed, add it to the filtered list.
-            $filtered_blocks[] = $block;
-        }
-    }
-
-    // Return the filtered list of allowed blocks
-    return $filtered_blocks;
+    return array_values(array_diff(array_keys($all_blocks), $blueprint_steps));
 }
-add_filter('allowed_block_types_all', 'filter_allowed_block_types', 10000, 2);
+add_filter('allowed_block_types_all', 'vbb_filter_allowed_block_types', 10000, 2);
 
 /**
  * Adds a custom block category 'Steps' to the block editor.
@@ -80,35 +77,35 @@ add_filter('allowed_block_types_all', 'filter_allowed_block_types', 10000, 2);
  */
 function add_new_block_category($block_categories, $block_editor_context)
 {
+    if (!isset($block_editor_context->post->post_type) || $block_editor_context->post->post_type !== 'blueprint') {
+        return $block_categories;
+    }
+
     $steps_categories = [
         [
             'slug'  => 'config',
-            'title' => esc_html__('Config', 'wp-playground-blueprint-editor')
+            'title' => esc_html__('Config', 'visual-blueprint-builder')
         ],
         [
             'slug'  => 'extend',
-            'title' => esc_html__('Extend', 'wp-playground-blueprint-editor'),
+            'title' => esc_html__('Extend', 'visual-blueprint-builder'),
         ],
         [
             'slug'  => 'file-system',
-            'title' => esc_html__('File System', 'wp-playground-blueprint-editor')
+            'title' => esc_html__('File System', 'visual-blueprint-builder')
         ],
         [
             'slug'  => 'data',
-            'title' => esc_html__('Data', 'wp-playground-blueprint-editor')
+            'title' => esc_html__('Data', 'visual-blueprint-builder')
         ],
         [
             'slug'  => 'scripts',
-            'title' => esc_html__('Scripts', 'wp-playground-blueprint-editor')
+            'title' => esc_html__('Scripts', 'visual-blueprint-builder')
         ],
     ];
 
 
-    foreach ($steps_categories as $step_category) {
-        array_push($block_categories, $step_category);
-    }
-
-    return $block_categories;
+    return array_merge($block_categories, $steps_categories);
 }
 add_filter('block_categories_all', 'add_new_block_category', 10, 2);
 
@@ -120,13 +117,13 @@ add_filter('block_categories_all', 'add_new_block_category', 10, 2);
  *
  * @return array Modified block editor settings.
  */
-function customize_editor_for_blueprint($settings)
+function customize_editor_for_blueprint($settings, $block_editor_context)
 {
-    if (get_current_screen()->post_type === 'blueprint') {
+    if (isset($block_editor_context->post->post_type) && $block_editor_context->post->post_type === 'blueprint') {
         $settings['supportsTemplateMode'] = false;
-        $settings['titlePlaceholder'] = "Add blueprint title";
+        $settings['titlePlaceholder'] = __('Add blueprint title', 'visual-blueprint-builder');
     }
 
     return $settings;
 }
-add_filter('block_editor_settings_all', 'customize_editor_for_blueprint');
+add_filter('block_editor_settings_all', 'customize_editor_for_blueprint', 10, 2);

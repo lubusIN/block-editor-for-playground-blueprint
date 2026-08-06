@@ -4,20 +4,14 @@
 import { __ } from '@wordpress/i18n';
 import { registerBlockType } from '@wordpress/blocks';
 import { wordpress } from '@wordpress/icons';
-import { useBlockProps } from '@wordpress/block-editor';
-import {
-	Placeholder,
-	Icon,
-	__experimentalVStack as VStack,
-	__experimentalHStack as HStack,
-	__experimentalText as Text,
-} from '@wordpress/components';
+import { __experimentalText as Text } from '@wordpress/components';
 import { DataForm } from '@wordpress/dataviews';
 
 /**
  * Internal dependencies.
  */
 import metadata from './block.json';
+import { StepWrapper } from '../../components';
 
 /**
  * Edit function for the plugin installation block.
@@ -25,70 +19,61 @@ import metadata from './block.json';
  * @param {Object} props Component properties.
  * @return {Element} Element to render.
  */
-function Edit({ attributes, setAttributes, isSelected }) {
+function Edit( { attributes, setAttributes, isSelected } ) {
 	const { wordPressFilesZip } = attributes;
 	const { url } = wordPressFilesZip;
 
-	const handleInputChange = (value) => {
-		setAttributes({
+	const handleInputChange = ( value ) => {
+		setAttributes( {
 			wordPressFilesZip: {
 				...wordPressFilesZip,
-				...value
-			}
-		});
+				...value,
+			},
+		} );
 	};
 
 	return (
-		<div {...useBlockProps()}>
-			<Placeholder
-				preview={
-					<VStack style={{ width: '100%' }}>
-						<HStack justify='left' align={'center'} spacing={3}>
-							<Icon icon={wordpress} size={28} className='step-icon' />
-							<VStack spacing={1}>
-								<Text upperCase size={12} weight={500} color='#949494'>{metadata.title}</Text>
-								{!isSelected && (
-									<Text weight={600}>
-										{__(
-											`from ${url || '{zip url}'}`,
-											'wp-playground-blueprint-editor'
-										)}
-									</Text>
-								)}
-							</VStack>
-						</HStack>
-						{isSelected && (
-							<DataForm
-								data={{
-									url
-								}}
-								fields={[
-									{
-										id: 'url',
-										label: __('Url', 'wp-playground-blueprint-editor'),
-										type: 'text',
-										placeholder: __('Enter the URL of the zip file', 'wp-playground-blueprint-editor'),
-									},
-								]}
-								form={{
-									fields: [
-										'url'
-									]
-								}}
-								onChange={handleInputChange}
-							/>
-						)}
-					</VStack>
-				}
+		<StepWrapper
+			title={ metadata.title }
+			icon={ wordpress }
+			isSelected={ isSelected }
+			summary={
+				<Text weight={ 600 }>
+					{ __(
+						`from ${ url || '{zip url}' }`,
+						'wp-playground-blueprint-editor'
+					) }
+				</Text>
+			}
+		>
+			<DataForm
+				data={ {
+					url,
+				} }
+				fields={ [
+					{
+						id: 'url',
+						label: __( 'Url', 'wp-playground-blueprint-editor' ),
+						type: 'text',
+						placeholder: __(
+							'Enter the URL of the zip file',
+							'wp-playground-blueprint-editor'
+						),
+					},
+				] }
+				form={ {
+					fields: [ 'url' ],
+				} }
+				onChange={ handleInputChange }
 			/>
-		</div>
+		</StepWrapper>
 	);
 }
 
 /**
  * Every block starts by registering a new block type definition.
  */
-registerBlockType(metadata.name, {
+registerBlockType( metadata.name, {
 	icon: wordpress,
 	edit: Edit,
-});
+} );

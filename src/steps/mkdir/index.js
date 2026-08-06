@@ -1,23 +1,17 @@
 /**
- * Wordpress dependencies.
+ * WordPress dependencies.
  */
 import { __ } from '@wordpress/i18n';
 import { registerBlockType } from '@wordpress/blocks';
 import { file } from '@wordpress/icons';
-import { useBlockProps } from '@wordpress/block-editor';
-import {
-	Placeholder,
-	Icon,
-	__experimentalVStack as VStack,
-	__experimentalHStack as HStack,
-	__experimentalText as Text,
-} from '@wordpress/components';
+import { __experimentalText as Text } from '@wordpress/components';
 import { DataForm } from '@wordpress/dataviews';
 
 /**
  * Internal dependencies.
  */
 import metadata from './block.json';
+import { StepWrapper } from '../../components';
 
 /**
  * The edit function describes the structure of your block in the context of the
@@ -25,55 +19,50 @@ import metadata from './block.json';
  *
  * @return {Element} Element to render.
  */
-function Edit({ attributes, setAttributes, isSelected }) {
+function Edit( { attributes, setAttributes, isSelected } ) {
 	const { path } = attributes;
 
 	return (
-		<p {...useBlockProps()}>
-			<Placeholder
-				preview={
-					<VStack style={{ width: '100%' }}>
-						<HStack justify='left' align={'center'} spacing={3}>
-							<Icon icon={file} size={28} className='step-icon' />
-							<VStack spacing={1}>
-								<Text upperCase size={12} weight={500} color='#949494'>{metadata.title}</Text>
-								{!isSelected && (
-									<Text weight={600}>
-										{__('at', 'wp-playground-blueprint-editor')} {` ${path || '{directory path}'}`}
-									</Text>
-								)}
-							</VStack>
-						</HStack>
-						{isSelected && (
-							<DataForm
-								data={attributes}
-								fields={[
-									{
-										id: 'path',
-										label: __('Directory Path', 'wp-playground-blueprint-editor'),
-										type: 'text',
-										placeholder: __('e.g., /wp-content/plugins/new-directory', 'wp-playground-blueprint-editor')
-									}
-								]}
-								form={{
-									fields: [
-										'path'
-									]
-								}}
-								onChange={setAttributes}
-							/>
-						)}
-					</VStack>
-				}
+		<StepWrapper
+			title={ metadata.title }
+			icon={ file }
+			isSelected={ isSelected }
+			summary={
+				<Text weight={ 600 }>
+					{ __( 'at', 'wp-playground-blueprint-editor' ) }{ ' ' }
+					{ ` ${ path || '{directory path}' }` }
+				</Text>
+			}
+		>
+			<DataForm
+				data={ attributes }
+				fields={ [
+					{
+						id: 'path',
+						label: __(
+							'Directory Path',
+							'wp-playground-blueprint-editor'
+						),
+						type: 'text',
+						placeholder: __(
+							'e.g., /wp-content/plugins/new-directory',
+							'wp-playground-blueprint-editor'
+						),
+					},
+				] }
+				form={ {
+					fields: [ 'path' ],
+				} }
+				onChange={ setAttributes }
 			/>
-		</p>
+		</StepWrapper>
 	);
 }
 
 /**
  * Every block starts by registering a new block type definition.
  */
-registerBlockType(metadata.name, {
+registerBlockType( metadata.name, {
 	icon: file,
 	edit: Edit,
-});
+} );
